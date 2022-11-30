@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
-import ev3dev.ev3 as ev3
+from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_D, SpeedPercent, MoveTank
+from ev3dev2.sensor import INPUT_1
+from ev3dev2.sensor.lego import ColorSensor
+from time import sleep
 
 
 # define output names
-OUTPUT_A = 'outA'
-OUTPUD_D = 'oudD'
+# OUTPUT_A = 'outA'
+# OUTPUT_D = 'oudD'
 
 # define wheel motors
-motor_r = ev3.LargeMotor(OUTPUT_A)
-motor_l = ev3.LargeMotor(OUTPUD_D)
+# motor_r = LargeMotor(OUTPUT_A)
+# motor_l = LargeMotor(OUTPUT_D)
+
+# define color sensors
+color_sensor_l = ColorSensor(address=INPUT_1)
 
 # define go_forward function
-def go_forward(speed=100, time=0.2):
+
+
+def go_forward(speed=100, rotations=10):
     '''
     runs both motors at the same time, what makes the car go forward
     speed is a percentage between 0 and 100
@@ -20,19 +28,28 @@ def go_forward(speed=100, time=0.2):
     # TODO: change below (driving with two motors)
     # motor_r.on_for_rotations(ev3.SpeedPercent(speed), 5)
     # motor_l.on_for_rotations(ev3.SpeedPercent(speed), 5)
-    tank_drive = ev3.MoveTank(OUTPUT_A, OUTPUD_D)
+    tank_drive = MoveTank(OUTPUT_A, OUTPUT_D)
+    tank_drive.on_for_rotations(SpeedPercent(speed), SpeedPercent(speed), rotations)
 
-    # drive in a turn for 5 rotations of the outer motor
-    # the first two parameters can be unit classes or percentages.
-    tank_drive.on_for_rotations(ev3.SpeedPercent(50), ev3.SpeedPercent(75), 10)
 
+def turn(speed=100, time=2, direction='right'):
+    '''
+    turns
+    '''
     # drive in a different turn for 3 seconds
-    tank_drive.on_for_seconds(ev3.SpeedPercent(60), ev3.SpeedPercent(30), 3)
+    pass
+
+
+def get_color():
+    color = color_sensor_l.color
+    text = ColorSensor.COLORS[color]
+    return(text)
 
 
 if __name__ == '__main__':
-    # TODO: code below
-    m = ev3.LargeMotor('outA')
-    m.run_timed(time_sp=3000, speed_sp=500)
+    # go_forward(speed=10, rotations=1)
+    # sleep(10)
+    # go_forward(speed=100, rotations=20)
     while True:
-        ev3.Leds.set_color(ev3.Leds.LEFT, (ev3.Leds.GREEN, ev3.Leds.RED)[ts.value()])
+        print(get_color())
+        sleep(0.1)
