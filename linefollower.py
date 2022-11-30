@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_D, SpeedPercent, MoveTank
-from ev3dev2.sensor import INPUT_1
+from ev3dev2.sensor import INPUT_1, INPUT_4
 from ev3dev2.sensor.lego import ColorSensor
 from time import sleep
 
@@ -14,7 +14,8 @@ from time import sleep
 # motor_l = LargeMotor(OUTPUT_D)
 
 # define color sensors
-color_sensor_l = ColorSensor(address=INPUT_1)
+color_sensor_r = ColorSensor(address=INPUT_1)
+color_sensor_l = ColorSensor(address=INPUT_4)
 
 # define go_forward function
 
@@ -32,18 +33,29 @@ def go_forward(speed=100, rotations=10):
     tank_drive.on_for_rotations(SpeedPercent(speed), SpeedPercent(speed), rotations)
 
 
-def turn(speed=100, time=2, direction='right'):
+def turn(speed=100, rotations=10, direction='right'):
     '''
     turns
     '''
-    # drive in a different turn for 3 seconds
-    pass
+    if direction == 'right':
+        speed_r = speed/3
+        speed_l = speed
+    else:
+        speed_r = speed
+        speed_l = speed/3
+    tank_drive = MoveTank(OUTPUT_A, OUTPUT_D)
+    tank_drive.on_for_rotations(SpeedPercent(speed), SpeedPercent(speed), rotations)
 
 
-def get_color():
-    color = color_sensor_l.color
-    text = ColorSensor.COLORS[color]
-    return(text)
+def get_colors():
+    '''
+    returns tuple of two strings: (right_color, left_color)
+    '''
+    color_r = color_sensor_r.color
+    text_r = ColorSensor.COLORS[color_r]
+    color_l = color_sensor_l.color
+    text_l = ColorSensor.COLORS[color_l]
+    return text_r, text_l
 
 
 if __name__ == '__main__':
@@ -51,5 +63,5 @@ if __name__ == '__main__':
     # sleep(10)
     # go_forward(speed=100, rotations=20)
     while True:
-        print(get_color())
+        print(get_colors())
         sleep(0.1)
