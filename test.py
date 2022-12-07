@@ -1,7 +1,6 @@
 from ev3dev2.sensor.lego import TouchSensor, ColorSensor
 from ev3dev2.sensor import INPUT_1, INPUT_3, INPUT_4
 from ev3dev2.motor import OUTPUT_A, OUTPUT_B, MoveSteering, SpeedPercent
-```
 #!/usr/bin/env python3
 
 
@@ -46,6 +45,3 @@ class LineFollower:
         if light_intensity_difference < -self.light_intensity_threshold:
             return -100
         return light_intensity_difference
-
-
-```
