@@ -16,11 +16,11 @@ color_sensor_l = ColorSensor(address=INPUT_4)
 steering_drive = MoveSteering(OUTPUT_D, OUTPUT_A)
 
 # define speed
-go_forward_speed = 50
-turn_speed = 25
+go_forward_speed = 10
+turn_speed = 5
 
 # define light intensity threshold
-light_threshold = 50
+light_threshold = 20
 STEERING_SCALAR = 1
 SPEED_THRESHOLD = 25
 
@@ -41,7 +41,7 @@ def follow_line():
         #print(color_sensor_l.reflected_light_intensity, color_sensor_r.reflected_light_intensity)
         #print('not turnings')
         if light_difference < 15:
-            return -5
+            return 0
         return light_difference*STEERING_SCALAR
 
     def adjust_speed(steering):
