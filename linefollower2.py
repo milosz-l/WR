@@ -16,8 +16,8 @@ color_sensor_l = ColorSensor(address=INPUT_4)
 steering_drive = MoveSteering(OUTPUT_D, OUTPUT_A)
 
 # define speed
-go_forward_speed = 10
-turn_speed = 5
+go_forward_speed = 20
+turn_speed = 10
 
 # define light intensity threshold
 light_threshold = 20
