@@ -28,17 +28,17 @@ SPEED_THRESHOLD = 25
 def follow_line():
 
     def adjust_steering():
-        # print(color_sensor_l.reflected_light_intensity, color_sensor_r.reflected_light_in$
-        # TODO: remember which side was black last time, then turn in that direction (90 d$
+        #print(color_sensor_l.reflected_light_intensity, color_sensor_r.reflected_light_intensity)
+        # TODO: remember which side was black last time, then turn in that direction (90 degree corner solution)
         # TODO: find crossing solution, NOTE: works
-        light_difference = color_sensor_l.reflected_light_intensity - color_sensor_r.refle$
+        light_difference = color_sensor_l.reflected_light_intensity - color_sensor_r.reflected_light_intensity
         if light_difference > light_threshold:
             # print('turning')
             return 100
         if light_difference < -light_threshold:
             # print('turning')
             return -100
-        # print(color_sensor_l.reflected_light_intensity, color_sensor_r.reflected_light_in$
+        #print(color_sensor_l.reflected_light_intensity, color_sensor_r.reflected_light_intensity)
         #print('not turnings')
         if light_difference < 15:
             return -5
