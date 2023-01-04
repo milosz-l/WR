@@ -20,25 +20,25 @@ STEERING_DRIVE = MoveSteering(OUTPUT_D, OUTPUT_A)
 ARM_MOTOR = MediumMotor(OUTPUT_B)
 
 # define speed
-GO_FORWARD_SPEED = 7
+GO_FORWARD_SPEED = 4
 TURN_SPEED = GO_FORWARD_SPEED
 
 # define light intensity threshold
-LIGHT_THRESHOLD = 18
+LIGHT_THRESHOLD = 15
 STEERING_SCALAR = 1
 SPEED_THRESHOLD = 25
 
 # define colors rgb lists
 RED_L = [130, 14, 17]
 RED_R = [210, 17, 35]
-BLUE_L = [16, 55, 90]
-BLUE_R = [27, 58, 180]
+BLUE_L = [17, 59, 90]
+BLUE_R = [25, 57, 180]
 GREEN_L = [12, 75, 32]
 GREEN_R = [22, 70, 63]
+BLACK_L = [16, 22, 19]
+BLACK_R = [22, 22, 38]
 WHITE_L = [100, 145, 110]
 WHITE_R = [180, 175, 255]
-BLACK_L = [10, 15, 15]
-BLACK_R = [15, 15, 30]
 MAX_EUCLIDEAN_DISTANCE = 510
 
 # define pick up and delivery color
@@ -65,15 +65,48 @@ class ColorFollower():
     def __del__(self):
         STEERING_DRIVE.off()
 
+    # def get_colors(self):
+    #     '''
+    #     returns tuple of two strings: (left_color, right_color)
+    #     '''
+    #     color_r = COLOR_SENSOR_R.color
+    #     text_r = ColorSensor.COLORS[color_r]
+    #     color_l = COLOR_SENSOR_L.color
+    #     text_l = ColorSensor.COLORS[color_l]
+    #     return text_l, text_r
+
+    # TODO: remove function below
+    # def closest_color_from_euclidean_distance(self, rgb):
+    #     '''
+    #     returns which color is closest in euclidean distance
+    #     returns Black, Blue or Green
+    #     '''
+    #     distances = {}
+    #     distances['Black'] = euclidean_distance(rgb, BLACK)
+
     def get_colors(self):
         '''
-        returns tuple of two strings: (left_color, right_color)
+        returns one of three colors that is closest in euclidean distance
+        returns Black, Blue, Green, White or Red
         '''
-        color_r = COLOR_SENSOR_R.color
-        text_r = ColorSensor.COLORS[color_r]
-        color_l = COLOR_SENSOR_L.color
-        text_l = ColorSensor.COLORS[color_l]
-        return text_l, text_r
+        rgb_l = COLOR_SENSOR_L.rgb
+        distances_l = {}
+        distances_l['Black'] = euclidean_distance(rgb_l, BLACK_L)
+        distances_l['Blue'] = euclidean_distance(rgb_l, BLUE_L)
+        distances_l['Green'] = euclidean_distance(rgb_l, GREEN_L)
+        distances_l['White'] = euclidean_distance(rgb_l, WHITE_L)
+        distances_l['Red'] = euclidean_distance(rgb_l, RED_L)
+        lowest_l = min(distances_l, key=distances_l.get)
+
+        rgb_r = COLOR_SENSOR_R.rgb
+        distances_r = {}
+        distances_r['Black'] = euclidean_distance(rgb_r, BLACK_R)
+        distances_r['Blue'] = euclidean_distance(rgb_r, BLUE_R)
+        distances_r['Green'] = euclidean_distance(rgb_r, GREEN_R)
+        distances_r['White'] = euclidean_distance(rgb_r, WHITE_R)
+        distances_r['Red'] = euclidean_distance(rgb_r, RED_R)
+        lowest_r = min(distances_r, key=distances_r.get)
+        return lowest_l, lowest_r
 
     def rgb_to_intensity(self, color_sensor, sensor_is_left, color):
         '''
@@ -95,11 +128,11 @@ class ColorFollower():
                 rgb_to_compare = GREEN_L
             else:
                 rgb_to_compare = GREEN_R
-        elif color == "Red":
-            if sensor_is_left:
-                rgb_to_compare = RED_L
-            else:
-                rgb_to_compare = RED_R
+        # elif color == "Red":
+        #     if sensor_is_left:
+        #         rgb_to_compare = RED_L
+        #     else:
+        #         rgb_to_compare = RED_R
         else:
             raise ValueError("invalid color passed")
         intensity_rgb = euclidean_distance(rgb, rgb_to_compare) / 510 * 100
@@ -120,13 +153,14 @@ class ColorFollower():
         # light_difference = calculated_intensity_l - calculated_intensity_r
         # light_difference = (calculated_intensity_l - calculated_intensity_r) / light_sum * 100
         light_difference = (calculated_intensity_l - calculated_intensity_r)
+        # print('light_difference: ', light_difference)
 
         # print(light_difference)
         if light_difference > LIGHT_THRESHOLD:
             return 100
         if light_difference < -LIGHT_THRESHOLD:
             return -100
-        if abs(light_difference) < 6:
+        if abs(light_difference) < 2:
             return 0
         # if light_sum < 15:
         #     return 0
@@ -146,6 +180,7 @@ class ColorFollower():
         returns calculated steering and speed for given color
         '''
         color_steering = self.adjust_color_steering(color)
+        # print('following ', color)
         color_speed = self.adjust_color_speed(color_steering)
         return color_steering, color_speed
 
@@ -153,6 +188,8 @@ class ColorFollower():
         '''
         check whether last n elements in a list are given color
         '''
+        if len(colors_list) < n:
+            return False
         return all([color == specific_color for color in colors_list[-n:]])
 
     def append_colors_lists(self, l_colors, r_colors):
@@ -171,7 +208,6 @@ class ColorFollower():
     def check_whether_to_turn(self, l_colors, r_colors):
         '''
         checks whether a turn should be made and returns 'left', 'right' or None
-        NOTE: at the moment it doesn't matter whether the function returns 'left' or 'right' - the robot just follows a line of a given color
         '''
         turn = None
         if self.last_elements_are_specific_color(colors_list=l_colors, specific_color=PACKAGE_COLOR, n=NUM_OF_COLORS_TO_TURN):
@@ -201,6 +237,17 @@ class ColorFollower():
             turn = self.check_whether_to_turn(l_colors, r_colors)
             if turn == 'left' or turn == 'right':
                 print('STARTED TURNING')
+                # turn for 90 degrees and move forward for a second
+                if turn == 'left':
+                    turn_steering = -100
+                else:
+                    turn_steering = 100
+                steering, speed = turn_steering, 7
+                STEERING_DRIVE.on(steering, speed)
+                sleep(2.1)  # TODO: adjust time sleep
+                steering, speed = 0, 7
+                STEERING_DRIVE.on(steering, speed)
+                sleep(1)
 
                 # follow PACKAGE_COLOR line until both are the same color (then we are on color square)
                 l_colors = []
@@ -217,33 +264,48 @@ class ColorFollower():
                 STEERING_DRIVE.on(steering, speed)
 
                 # pick up the package
-                ARM_MOTOR.on_for_degrees(speed=20, degrees=-50, brake=True, block=True)
+                ARM_MOTOR.on_for_degrees(speed=3, degrees=-50, brake=True, block=True)
                 sleep(1)
 
                 # move around 180 degrees
-                steering, speed = 100, 5
+                steering, speed = 100, 7
                 STEERING_DRIVE.on(steering, speed)
-                sleep(2)  # TODO: adjust time sleep
-
-                # put down the package # TODO: move this below green following
-                ARM_MOTOR.on_for_degrees(speed=20, degrees=50, brake=True, block=True)
-                sleep(1)
+                sleep(4.2)  # TODO: adjust time sleep
 
                 # follow DELIVERY_COLOR (green) until both sensors are the same color (then we are on color square)
                 print('FOLLOWING DELIVERY_COLOR')
+                # TODO: add turning 90 degrees here
                 l_colors = []
                 r_colors = []
                 while not self.at_square(l_colors, r_colors, DELIVERY_COLOR):
                     # append colors lists
                     l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
+                    # print(l_colors[-1], r_colors[-1])
                     steering, speed = self.get_steering_and_speed_for_color_linefollowing(DELIVERY_COLOR)
                     STEERING_DRIVE.on(steering, speed)
+
+                print('AT DELIVERY COLOR SQUARE')
+                # stop at color
+                steering, speed = 0, 0
+                STEERING_DRIVE.on(steering, speed)
+
+                # put down the package
+                ARM_MOTOR.on_for_degrees(speed=3, degrees=50, brake=True, block=True)
+                sleep(1)
 
             else:   # if not making any turn just follow black line
                 steering, speed = self.get_steering_and_speed_for_color_linefollowing("Black")
                 STEERING_DRIVE.on(steering, speed)
 
+    def print_sensors_rgb_for_configuration(self):
+        while True:
+            rgb_l = COLOR_SENSOR_L.rgb
+            rgb_r = COLOR_SENSOR_R.rgb
+            # print(rgb_l, rgb_r)
+            sleep(0.1)
+
 
 if __name__ == '__main__':
     taczkowoz = ColorFollower()
     taczkowoz.deliver_package()
+    # taczkowoz.print_sensors_rgb_for_configuration()
