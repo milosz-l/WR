@@ -48,7 +48,7 @@ DELIVERY_COLOR = "Green"
 # define the size of list with colors
 NUM_OF_COLORS_IN_LIST = 10
 # define how many colors in a row are needed to make a turn
-NUM_OF_COLORS_TO_TURN = 3
+NUM_OF_COLORS_TO_TURN = 3   # TODO: adjust these
 # define how many colors in a row are needed to stop the car
 NUM_OF_COLORS_TO_STOP = 8
 
