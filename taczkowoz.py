@@ -4,6 +4,7 @@ from ev3dev2.sensor import INPUT_1, INPUT_4
 from ev3dev2.sensor.lego import ColorSensor
 from time import sleep
 
+
 # define output names
 OUTPUT_A = 'outA'
 OUTPUT_B = 'outB'
@@ -60,26 +61,31 @@ def taczkowoz():
         text_r = ColorSensor.COLORS[color_r]
         color_l = color_sensor_l.color
         text_l = ColorSensor.COLORS[color_l]
-        print(text_l, text_r)
+        # print(text_l, text_r)
         return text_l, text_r
 
-    def get_steering_and_speed_for_color_linefollowing(color, color_sensor):
-        def rgb_to_intensity(color=color):
+    def get_steering_and_speed_for_color_linefollowing(color):
+        def rgb_to_intensity(color_sensor, color=color):
             '''
             color can be either black, blue or red
             '''
             rgb = color_sensor.rgb
-            if color == "black":
-                intensity_rgb = 100 - ((rgb[0] + rgb[1] + rgb[2]) / (256*3))
-            elif color == "blue":
-                intensity_rgb = 100 - (rgb[2] / 256)
-            elif color == "red":
-                intensity_rgb = 100 - (rgb[0] / 256)
+
+            if color == "Black":
+                # intensity_rgb = 100 - ((rgb[0] + rgb[1] + rgb[2]) / (256*3)) * 100
+                intensity_rgb = ((rgb[0] + rgb[1] + rgb[2]) / (256*3)) * 100    # returns white intensity
+            elif color == "Blue":
+                intensity_rgb = 100 - (rgb[2] / 256) * 100
+            elif color == "Red":
+                intensity_rgb = 100 - (rgb[0] / 256) * 100
+            else:
+                raise ValueError("invalid color passed")
             return intensity_rgb
 
-        def adjust_color_steering(color=color):
-            calculated_intensity_l = rgb_to_intensity(color, color_sensor_l)
-            calculated_intensity_r = rgb_to_intensity(color, color_sensor_r)
+        def adjust_color_steering():
+            calculated_intensity_l = rgb_to_intensity(color_sensor_l)
+            calculated_intensity_r = rgb_to_intensity(color_sensor_r)
+            print("looking for", color, calculated_intensity_l, calculated_intensity_r)
             light_difference = calculated_intensity_l - calculated_intensity_r
             if light_difference > light_threshold:
                 return 100
@@ -102,15 +108,11 @@ def taczkowoz():
     def last_elements_are_specific_color(colors_list, n=5, specific_color="Blue"):
         return all([color == specific_color for color in colors_list[-n:]])
 
-    PACKAGE_COLOR = "Red"  # or blue przetestowac
+    PACKAGE_COLOR = "Black"  # or blue przetestowac
     NUM_OF_COLORS_IN_LIST = 10
     l_colors = []
     r_colors = []
     while True:
-        # sleep(0.1)
-        # color_sensor_l.calibrate_white()
-        # color_sensor_r.calibrate_white()
-
         # append colors lists
         l_color, r_color = get_colors()
         l_colors.append(l_color)
@@ -129,24 +131,25 @@ def taczkowoz():
             turn = 'right'
 
         if turn == 'left' or turn == 'right':
-            # TODO: turn right or left 90 degrees and go forward for one square
-            if turn == 'left':
-                steering = -100
-            elif turn == 'right':
-                steering = 100
-            turning_sleep_time = 0.55*turn_speed
-            steering_drive.on(steering, turn_speed)
-            print("sleeping at turn for ", turning_sleep_time)
-            sleep(turning_sleep_time)
+            # # TODO: turn right or left 90 degrees and go forward for one square
+            # if turn == 'left':
+            #     steering = -100
+            # elif turn == 'right':
+            #     steering = 100
+            # turning_sleep_time = 0.55*turn_speed
+            # steering_drive.on(steering, turn_speed)
+            # print("sleeping at turn for ", turning_sleep_time)
+            # sleep(turning_sleep_time)
 
-            go_forward_sleep_time = 0.1*go_forward_speed
-            steering_drive.on(0, go_forward_speed)
-            print("sleeping at go forward for ", go_forward_sleep_time)
-            sleep(go_forward_sleep_time)
+            # go_forward_sleep_time = 0.1*go_forward_speed
+            # steering_drive.on(0, go_forward_speed)
+            # print("sleeping at go forward for ", go_forward_sleep_time)
+            # sleep(go_forward_sleep_time)
 
             # TODO: turn to PACKAGE_COLOR and follow black line until both are the same color (then we are on color square)
             while not (last_elements_are_specific_color(colors_list=l_colors, specific_color=PACKAGE_COLOR) and last_elements_are_specific_color(colors_list=r_colors, specific_color=PACKAGE_COLOR)):
-                steering, speed = get_steering_and_speed_for_color_linefollowing()
+                steering, speed = get_steering_and_speed_for_color_linefollowing(PACKAGE_COLOR)
+                print('dup')
                 steering_drive.on(steering, speed)
 
             # TODO: change to delivery color
