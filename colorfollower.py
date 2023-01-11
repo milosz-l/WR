@@ -48,7 +48,7 @@ DELIVERY_COLOR = "Green"
 # define the size of list with colors
 NUM_OF_COLORS_IN_LIST = 10
 # define how many colors in a row are needed to make a turn
-NUM_OF_COLORS_TO_TURN = 5   # TODO: adjust these
+NUM_OF_COLORS_TO_TURN = 5  # 5   # TODO: adjust these
 # define how many colors in a row are needed to stop the car
 NUM_OF_COLORS_TO_STOP = 8
 
@@ -92,6 +92,7 @@ class ColorFollower():
         returns one of three colors that is closest in euclidean distance
         returns Black, Blue, Green, White or Red
         '''
+        COLOR_THRESHOLD = 60
         rgb_l = COLOR_SENSOR_L.rgb
         distances_l = {}
         distances_l['Black'] = euclidean_distance(rgb_l, BLACK_L)
@@ -109,7 +110,15 @@ class ColorFollower():
         distances_r['White'] = euclidean_distance(rgb_r, WHITE_R)
         distances_r['Red'] = euclidean_distance(rgb_r, RED_R)
         lowest_r = min(distances_r, key=distances_r.get)
+
+        if distances_l[lowest_l] > COLOR_THRESHOLD or distances_r[lowest_r] > COLOR_THRESHOLD:
+            print('***** COLOR THRESHOLD *****')
+            return "Black", "Black"
+
+        print('-----------------------')
         print(lowest_l, lowest_r)
+        print(distances_l[lowest_l], distances_r[lowest_r])
+        print('-----------------------')
         return lowest_l, lowest_r
 
     def rgb_to_intensity(self, color_sensor, sensor_is_left, color):
@@ -209,15 +218,15 @@ class ColorFollower():
             r_colors.pop(0)
         return l_colors, r_colors
 
-    def check_whether_to_turn(self, l_colors, r_colors):
+    def check_whether_to_turn(self, l_colors, r_colors, color=PACKAGE_COLOR):
         '''
         checks whether a turn should be made and returns 'left', 'right' or None
         '''
         turn = None
-        if self.last_elements_are_specific_color(colors_list=l_colors, specific_color=PACKAGE_COLOR, n=NUM_OF_COLORS_TO_TURN):
-            if not self.last_elements_are_specific_color(colors_list=r_colors, specific_color=PACKAGE_COLOR, n=NUM_OF_COLORS_TO_TURN):
+        if self.last_elements_are_specific_color(colors_list=l_colors, specific_color=color, n=NUM_OF_COLORS_TO_TURN):
+            if not self.last_elements_are_specific_color(colors_list=r_colors, specific_color=color, n=NUM_OF_COLORS_TO_TURN):
                 turn = 'left'
-        elif self.last_elements_are_specific_color(colors_list=r_colors, specific_color=PACKAGE_COLOR, n=NUM_OF_COLORS_TO_TURN):
+        elif self.last_elements_are_specific_color(colors_list=r_colors, specific_color=color, n=NUM_OF_COLORS_TO_TURN):
             turn = 'right'
         return turn
 
@@ -234,7 +243,7 @@ class ColorFollower():
         l_colors = []
         r_colors = []
         while True:
-            sleep(FREQUENCY)
+            # sleep(FREQUENCY)
 
             # append colors lists
             l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
@@ -242,7 +251,6 @@ class ColorFollower():
             # check whether a turn should be made
             turn = self.check_whether_to_turn(l_colors, r_colors)
             if turn == 'left' or turn == 'right':
-                print('STARTED TURNING')
                 # turn for 90 degrees and move forward for a second
                 if turn == 'left':
                     turn_steering = -100
@@ -251,7 +259,7 @@ class ColorFollower():
                 steering, speed = turn_steering, 7
                 STEERING_DRIVE.on(steering, speed)
                 print('TURNING BLUE')
-                sleep(2.1)  # TODO: adjust time sleep
+                sleep(1.9)  # 2.1  # TODO: adjust time sleep
                 steering, speed = 0, 7
                 STEERING_DRIVE.on(steering, speed)
                 sleep(1)
@@ -260,7 +268,7 @@ class ColorFollower():
                 l_colors = []
                 r_colors = []
                 while not self.at_square(l_colors, r_colors, PACKAGE_COLOR):
-                    sleep(FREQUENCY)
+                    # sleep(FREQUENCY)
                     # append colors lists
                     l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
                     steering, speed = self.get_steering_and_speed_for_color_linefollowing(PACKAGE_COLOR)
@@ -283,10 +291,42 @@ class ColorFollower():
                 # follow DELIVERY_COLOR (green) until both sensors are the same color (then we are on color square)
                 print('FOLLOWING DELIVERY_COLOR')
 
+                # TODO: add turning 90 degrees to green
+                turned_to_green = False
+                while not turned_to_green:
+                    l_colors = []
+                    r_colors = []
+                    while not turned_to_green:
+                        # sleep(FREQUENCY)
+
+                        # append colors lists
+                        l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
+
+                        # check whether a turn should be made
+                        turn = self.check_whether_to_turn(l_colors, r_colors, color=DELIVERY_COLOR)
+                        if turn == 'left' or turn == 'right':
+                            # turn for 90 degrees and move forward for a second
+                            if turn == 'left':
+                                turn_steering = -100
+                            else:
+                                turn_steering = 100
+                            steering, speed = turn_steering, 7
+                            STEERING_DRIVE.on(steering, speed)
+                            print('TURNING GREEN')
+                            sleep(1.9)  # 2.1  # TODO: adjust time sleep
+                            steering, speed = 0, 7
+                            STEERING_DRIVE.on(steering, speed)
+                            sleep(1)
+                            turned_to_green = True
+                        else:   # if not making any turn just follow DELIVERY_COLOR line
+                            steering, speed = self.get_steering_and_speed_for_color_linefollowing(DELIVERY_COLOR)
+                            STEERING_DRIVE.on(steering, speed)
+
+                # stopping at square
                 l_colors = []
                 r_colors = []
                 while not self.at_square(l_colors, r_colors, DELIVERY_COLOR):
-                    sleep(FREQUENCY)
+                    # sleep(FREQUENCY)
                     # append colors lists
                     l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
                     # print(l_colors[-1], r_colors[-1])
@@ -300,7 +340,8 @@ class ColorFollower():
 
                 # put down the package
                 ARM_MOTOR.on_for_degrees(speed=3, degrees=50, brake=True, block=True)
-                sleep(1)
+                print('FINISHED, sleep for 10')
+                sleep(10)
 
             else:   # if not making any turn just follow black line
                 steering, speed = self.get_steering_and_speed_for_color_linefollowing("Black")
