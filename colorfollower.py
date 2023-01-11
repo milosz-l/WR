@@ -48,9 +48,12 @@ DELIVERY_COLOR = "Green"
 # define the size of list with colors
 NUM_OF_COLORS_IN_LIST = 10
 # define how many colors in a row are needed to make a turn
-NUM_OF_COLORS_TO_TURN = 3   # TODO: adjust these
+NUM_OF_COLORS_TO_TURN = 5   # TODO: adjust these
 # define how many colors in a row are needed to stop the car
 NUM_OF_COLORS_TO_STOP = 8
+
+# define frequency
+FREQUENCY = 0.01
 
 
 def euclidean_distance(vx, vy):
@@ -106,6 +109,7 @@ class ColorFollower():
         distances_r['White'] = euclidean_distance(rgb_r, WHITE_R)
         distances_r['Red'] = euclidean_distance(rgb_r, RED_R)
         lowest_r = min(distances_r, key=distances_r.get)
+        print(lowest_l, lowest_r)
         return lowest_l, lowest_r
 
     def rgb_to_intensity(self, color_sensor, sensor_is_left, color):
@@ -230,6 +234,8 @@ class ColorFollower():
         l_colors = []
         r_colors = []
         while True:
+            sleep(FREQUENCY)
+
             # append colors lists
             l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
 
@@ -244,6 +250,7 @@ class ColorFollower():
                     turn_steering = 100
                 steering, speed = turn_steering, 7
                 STEERING_DRIVE.on(steering, speed)
+                print('TURNING BLUE')
                 sleep(2.1)  # TODO: adjust time sleep
                 steering, speed = 0, 7
                 STEERING_DRIVE.on(steering, speed)
@@ -253,6 +260,7 @@ class ColorFollower():
                 l_colors = []
                 r_colors = []
                 while not self.at_square(l_colors, r_colors, PACKAGE_COLOR):
+                    sleep(FREQUENCY)
                     # append colors lists
                     l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
                     steering, speed = self.get_steering_and_speed_for_color_linefollowing(PACKAGE_COLOR)
@@ -274,10 +282,11 @@ class ColorFollower():
 
                 # follow DELIVERY_COLOR (green) until both sensors are the same color (then we are on color square)
                 print('FOLLOWING DELIVERY_COLOR')
-                # TODO: add turning 90 degrees here
+
                 l_colors = []
                 r_colors = []
                 while not self.at_square(l_colors, r_colors, DELIVERY_COLOR):
+                    sleep(FREQUENCY)
                     # append colors lists
                     l_colors, r_colors = self.append_colors_lists(l_colors, r_colors)
                     # print(l_colors[-1], r_colors[-1])
