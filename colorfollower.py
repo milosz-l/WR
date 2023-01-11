@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from ev3dev2.motor import OUTPUT_A, OUTPUT_B, OUTPUT_D, MoveSteering, SpeedPercent, MediumMotor
-from ev3dev2.sensor import INPUT_1, INPUT_4
+from ev3dev2.sensor import INPUT_1, INPUT_4, INPUT_3
 from ev3dev2.sensor.lego import ColorSensor, InfraredSensor
 
 from time import sleep
@@ -13,6 +13,10 @@ OUTPUT_D = 'outD'
 # define color sensors
 COLOR_SENSOR_R = ColorSensor(address=INPUT_1)
 COLOR_SENSOR_L = ColorSensor(address=INPUT_4)
+
+# define InfraredSensor
+INFRARED_SENSOR = InfraredSensor(address=INPUT_3)
+PROXIMITY_THRESHOLD = 1.3
 
 # define MoveSteering object
 STEERING_DRIVE = MoveSteering(OUTPUT_D, OUTPUT_A)
@@ -275,6 +279,12 @@ class ColorFollower():
                     steering, speed = self.get_steering_and_speed_for_color_linefollowing(PACKAGE_COLOR)
                     STEERING_DRIVE.on(steering, speed)
                 print('AT PACKAGE COLOR SQUARE')
+
+                # use InfraredSensor
+                proximity = INFRARED_SENSOR.proximity / 10    # 0 means 0cm, 100 means 7cm
+                while not proximity < PROXIMITY_THRESHOLD:  # if proximity is below around 3cm
+                    proximity = INFRARED_SENSOR.proximity / 10    # 0 means 0cm, 100 means 7cm
+                    print('proximity = ', proximity)
 
                 # stop at color
                 steering, speed = 0, 0
