@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from ev3dev2.motor import OUTPUT_A, OUTPUT_B, OUTPUT_D, MoveSteering, SpeedPercent, MediumMotor
 from ev3dev2.sensor import INPUT_1, INPUT_4
-from ev3dev2.sensor.lego import ColorSensor
+from ev3dev2.sensor.lego import ColorSensor, InfraredSensor
+
 from time import sleep
 
 # define output names
@@ -112,13 +113,13 @@ class ColorFollower():
         lowest_r = min(distances_r, key=distances_r.get)
 
         if distances_l[lowest_l] > COLOR_THRESHOLD or distances_r[lowest_r] > COLOR_THRESHOLD:
-            print('***** COLOR THRESHOLD *****')
+            # print('***** COLOR THRESHOLD *****')
             return "Black", "Black"
 
-        print('-----------------------')
-        print(lowest_l, lowest_r)
-        print(distances_l[lowest_l], distances_r[lowest_r])
-        print('-----------------------')
+        # print('-----------------------')
+        # print(lowest_l, lowest_r)
+        # print(distances_l[lowest_l], distances_r[lowest_r])
+        # print('-----------------------')
         return lowest_l, lowest_r
 
     def rgb_to_intensity(self, color_sensor, sensor_is_left, color):
