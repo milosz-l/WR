@@ -254,7 +254,7 @@ class ColorFollower():
                 # move around 180 degrees
                 steering, speed = 100, 7
                 STEERING_DRIVE.on(steering, speed)
-                sleep(4.2)  # TODO: adjust time sleep
+                sleep(4.2)
 
                 # follow DELIVERY_COLOR (green) until both sensors are the same color (then we are on color square)
                 print('FOLLOWING DELIVERY_COLOR')
